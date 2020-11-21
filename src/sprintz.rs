@@ -71,7 +71,8 @@ pub struct SprintzCompressor<'a>{
 
         output.write(&lenBytes);
         
-        for val in self.input {
+        for val in self.input 
+        {
             
            let compress = self.submitDouble(*val);
            
@@ -82,7 +83,8 @@ pub struct SprintzCompressor<'a>{
         
         //flush(); //Not implemented
         
-        for error in self.block.iter() {
+        for error in self.block.iter() 
+        {
             //Do stuff
         
         }
@@ -94,9 +96,11 @@ pub struct SprintzCompressor<'a>{
     
     //submits a double to the block for compression
     //Returns tureif the block is fill and should be send to the output stream
-    fn submitDouble(&mut self, value:f64 ) -> bool {
+    fn submitDouble(&mut self, value:f64 ) -> bool 
+    {
      
-        if self.blockPos == self.blockSize {
+        if self.blockPos == self.blockSize 
+        {
             self.blockPos = 0;
             return true;
         } else {
@@ -109,5 +113,63 @@ pub struct SprintzCompressor<'a>{
            return false; 
         }
     }
+    
+     //  Returns the number of leading zero bits in the given byte[], 
+    //  ignoring the sign bit.
+    fn leadingZeroes(bs : &[u8]) -> usize
+    {
+        let mut first = true;
+        let mut ret = 1;
+        for b in bs 
+        {
+            let n = if first {
+                        first = false;
+                        6//used to ignore sign bit
+                    } else {
+                        7
+                    };
+            
+            for i in (1..=n).rev()
+             {
+                let bit = ((b & (1 << i)) >> i);
+                if bit == 0 {
+                    ret += 1;
+                } else {
+                    return ret;
+                }
+            }
+        }
+        return ret;
+    }
+    
+    fn compressBlock<'a>(&mut self, finish: bool) 
+    {
+        
+        //Doubles are 64 bits to 8 bytes
+        const byteWidth: usize = 8; 
+        
+        //Stores the byte version of each double to be compressed
+        let valueBytes: Vec::<[u8; byteWidth]> = Vec::with_capacity(self.blockSize); 
+         
+        let mut bitTracker = [0; byteWidth];
+        
+        for i in 0..self.blockSize 
+        {
+            let valBytes = self.block[i].to_be_bytes();
+            
+            for b in 0..byteWidth 
+            {
+                bitTracker[b] = bitTracker[b] | valBytes[0];
+            }
+        
+            
+        }
+        
+        let leadZeros = SprintzCompressor::leadingZeroes(&bitTracker);
+        
+   
+        
+    }
+    
     
 }
