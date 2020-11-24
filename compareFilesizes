@@ -1,0 +1,14 @@
+#!/bin/bash
+
+totalCR=0;
+totalCount=0;
+for f in data/Beef/*; do
+  oldSize=$(wc -c $f | awk '{print $1}');
+  newSize=$(wc -c output_data/Beef/$(basename $f).gorilla | awk '{print $1}');
+  diff=`expr $oldSize - $newSize`
+  echo $(basename $f): old = $oldSize : new = $newSize : diff = $diff \($(bc -l <<< "scale=2; $newSize/$oldSize") CR\);
+  totalCR=$(bc -l <<< "$totalCR + $newSize/$oldSize");
+  totalCount=$(($totalCount+1));
+done
+
+echo Average CR = $(bc -l <<< "scale=2; $totalCR/$totalCount");
