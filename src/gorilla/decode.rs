@@ -22,11 +22,9 @@ pub fn gorilla_decode(input_filename: &str, output_filename: &str) {
             .expect("Read wrong number of bytes"),
     );
     values.push(f64::from_bits(previous_value));
-    // println!("first value: {}", f64::from_bits(previous_value));
 
     // Now loop through entire file
     loop {
-        // println!("Looping...");
         let next_bit: bool;
         let eof_check = reader.read_bit();
         if eof_check.is_err() {
@@ -36,7 +34,6 @@ pub fn gorilla_decode(input_filename: &str, output_filename: &str) {
             next_bit = eof_check.unwrap();
         }
         if !next_bit {
-            // println!("Read 0: Same value");
             // If next bit is 0, then it's the same value as previously
             values.push(f64::from_bits(previous_value));
         } else {
@@ -46,10 +43,6 @@ pub fn gorilla_decode(input_filename: &str, output_filename: &str) {
                 // then the length of meaningful XORed value in the next 6 bits
                 leading_zeros = reader.read_bits(5).unwrap();
                 trailing_zeros = 64 - leading_zeros - (reader.read_bits(6).unwrap() + 1);
-                // println!(
-                //     "Control bit was 1. {} leading zeros and {} trailing zeros",
-                //     leading_zeros, trailing_zeros
-                // );
             }
             let size = 64 - leading_zeros - trailing_zeros;
             let next_bits = reader.read_bits(size as usize).unwrap() as u64;
@@ -60,15 +53,9 @@ pub fn gorilla_decode(input_filename: &str, output_filename: &str) {
             }
 
             previous_value ^= next_bits << trailing_zeros;
-            // println!(
-            //     "Size should be {} and read {} to get new value {}",
-            //     size, next_bits, previous_value,
-            // );
             values.push(f64::from_bits(previous_value));
         }
-        // println!("{}", f64::from_bits(previous_value));
     }
-    // println!("{:?}", &values);
     let mut f = File::create(output_filename).expect("Could not create output file");
     let value_strings: Vec<String> = values.iter().map(|&n| n.to_string()).collect();
     writeln!(f, "{}", value_strings.join(",")).unwrap();

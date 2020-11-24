@@ -15,7 +15,6 @@ pub fn gorilla_encode(input_filename: &str, output_filename: &str) {
 
     // First write the first value in full
     let mut previous_value = data[0].to_bits();
-    // println!("value: ({:#15}) = {:#066b}", data[0], previous_value);
 
     // Initialize leading and trailing zeros
     let mut previous_leading_zeros: u32 = 64;
@@ -32,25 +31,12 @@ pub fn gorilla_encode(input_filename: &str, output_filename: &str) {
         if xor == 0 {
             // If there is no difference from previous value, then we write a 0
             writer.write_bit(false).unwrap();
-        // println!("value: ({:#15}) - Same value found, writing 0", d);
         } else {
             // Otherwise a 1, followed by more logic to show difference
             writer.write_bit(true).unwrap();
 
             let current_leading_zeros = xor.leading_zeros();
             let current_trailing_zeros = xor.trailing_zeros();
-
-            // println!(
-            //     "value: ({:#015}) : {:#066b} | xor : ({:017}) = {:#066b} | leading zeros = {} | prev leading zeros = {} | trailing zeros = {} | prev trailing zeros = {}",
-            //     d,
-            //     d.to_bits(),
-            //     xor,
-            //     xor,
-            //     current_leading_zeros,
-            //     previous_leading_zeros,
-            //     current_trailing_zeros,
-            //     previous_trailing_zeros
-            // );
 
             // If block of meaningful bits is within previous meaningful bits
             if current_leading_zeros >= previous_leading_zeros
