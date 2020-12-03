@@ -1,0 +1,6 @@
+#!/bin/bash
+
+for f in output_data/Beef/*; do
+  echo "starting" $(basename $f)
+  target/release/compressing_doubles gorilla decode $f $f.decoded;
+done
