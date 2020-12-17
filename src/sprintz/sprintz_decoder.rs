@@ -2,142 +2,120 @@ use std::io::Cursor;
 //use std::io::Write;
 use std::vec::Vec;
 use std::io;
-
-pub struct Forecaster {
-    previous: u64,
-    
-    
-}
-
-impl Forecaster {
-    
-    fn predict(&self, value: u64) -> u64 {
-        self.previous
-    }
-    
-    
-    fn error(&self, value: u64) -> u64 {
- 
-        value ^ self.predict(value)
-    }
-    
-    
-    //Trains the forecaster for a better prediction
-    //Out algorithm just returns the previous value
-    fn train(&mut self, value:  u64, error: u64) {
-        self.previous = value;
-    }
-}
+use std::io::Read;
+use super::forecaster::Forecaster;
 
 
-/*pub struct SprintzDecoder<'a>
+pub struct SprintzDecoder<'a>
 {
-    input: &'a Cursor<Vec<u8>>,
-    blockSize: usize,
+    input: SprintzInput<'a>,
+    block_size: u32,
     forecaster: Forecaster,
-    readPos: u32,
-    leftInBlock: u32,
-    zeroesLeft: u64,
-    nBits: u32,
+    read_pos: u32,
+    left_in_block: u32,
+    zeroes_left: u64,
+    nbits: u32,
     
 }
 
 
  impl SprintzDecoder<'_> {
-    pub fn new<'a>(datainput: &'a Cursor<Vec<u8>>, blockSize: usize)-> SprintzDecoder
+    pub fn new<'a>(datainput: &'a mut  Cursor<Vec<u8>>, block_size: u32)-> SprintzDecoder<'a>
     {
          SprintzDecoder 
          {
             input: SprintzInput::new(datainput),
-            blockSize,
-            forecaster: Forecaster{ previous: 0u64},
-            readPos: 0,
-            leftInBlock: 0,
-            zeroesLeft: 0,
-            nBits: 0,
+            block_size,
+            forecaster: Forecaster::new(),
+            read_pos: 0,
+            left_in_block: 0,
+            zeroes_left: 0,
+            nbits: 0,
          }
          
     }
     
     
-   pub fn readValue(self) -> u64
+   pub fn read_value(&mut self) -> io::Result<u64>
     {
-        if self.leftInBlock > 0 {
-            let xor: u64 = self.getLong(1) << 63;
-            xor |= self.getLong(self.nBits);
-            self.leftInBlock-=1;
+        if self.left_in_block > 0 {
+            let mut xor: u64 = self.get_bits(1)? << 63;
+            xor |= self.get_bits(self.nbits)?;
+            self.left_in_block-=1;
             
             let ret = self.forecaster.error(xor);
             self.forecaster.train(xor, ret);
-            return ret;
-        } else if self.zeroesLeft > 0 {
-            self.zeroesLeft-=1;
-            return self.forecaster.predict(0);
+            return Ok(ret);
+        } else if self.zeroes_left > 0 {
+            self.zeroes_left-=1;
+            return Ok(self.forecaster.predict());
         } else {
-            self.nBits = self.getLong(7) as u32;
-            if self. nBits == 0 {
-                let numZeroBlocks = self.getLong(16);
-                self.zeroesLeft = self.numZeroBlocks * self.blockSize;
+            self.nbits = self.get_bits(7)? as u32;
+            if self. nbits == 0 {
+                let num_zero_blocks = self.get_bits(16)?;
+                self.zeroes_left = num_zero_blocks * (self.block_size as u64);
             } else {
-                self.leftInBlock = self.blockSize;
+                self.left_in_block = self.block_size;
             }
             
-            return self.readValue();
+            return self.read_value();
         }
         
     }
     
-    fn getBits(self, bits: u32) -> u64 {
-        self.pos += bits;
-        return self.input.readLong(bits);
+    fn get_bits(&mut self, bits: u32) -> io::Result<u64> {
+        self.read_pos += bits;
+        return self.input.read_long(bits);
     }
-}*/
+}
 
 
 struct SprintzInput<'a> {
-    input: &'a Cursor<Vec<u8>>,
-    bitsLeft: u8,
-    byteBuffer: u8
+    input: &'a mut  Cursor<Vec<u8>>,
+    bits_left: u32,
+    byte_buffer: u8
     
 }
 
 impl SprintzInput<'_> {
     
-    fn new<'a>(input: &'a Cursor<Vec<u8>>) -> SprintzInput<'a>{
+    fn new<'a>(input: &'a  mut Cursor<Vec<u8>>) -> SprintzInput<'a>{
         SprintzInput{
             input,
-            bitsLeft: 0,
-            bytesBuffer: 0
+            bits_left: 0,
+            byte_buffer: 0
         }
     }
     
-    fn bufferByte(self) -> io::Result<()>{
-        if self.bitsLeft == 0 {
-            let mut buffer = [u8;1];
-            self.input.read_exact(buffer)? ;
-            self.byteBuffer = buffer[0];
-            self.bitsLeft = 8;
+    fn buffer_byte(&mut self) -> io::Result<()>{
+        if self.bits_left == 0 {
+            let mut buffer:[u8;1] = [0;1];
+            self.input.read_exact(&mut buffer)? ;
+            self.byte_buffer = buffer[0];
+            self.bits_left = 8;
         }
+        
+        return Ok(());
     }
     
-    fn readLong(self, bits:u32) -> io::Result<u64> {
-        let value = 0u64;
+    fn read_long(&mut self, mut bits:u32) -> io::Result<u64> {
+        let mut value = 0u64;
         while bits > 0 {
-            if bits > self.bitsLeft || bits == 8 {
-                // Take only the bitsLeft "least significant" bits
-                let d: u8 = self.byteBuffer & ((1<< self.bitsLeft) - 1);
-                value = (value << self.bitsLeft) + (d & 0xFF);
-                bits -= self.bitsLeft;
-                self.bitsLeft = 0;
+            if bits > self.bits_left || bits == 8 {
+                // Take only the bits_left "least significant" bits
+                let d: u8 = self.byte_buffer & ((1<< self.bits_left) - 1);
+                value = (value << self.bits_left) + ((d & 0xFFu8) as u64);
+                bits -= self.bits_left;
+                self.bits_left = 0;
             } else {
                 // Shift to correct position and take only least significant bits
-                let d: u8 =  (self.byteBuffer >> (self.bitsLeft - bits)) & ((1<<bits) - 1);
-                value = (value << bits) + (d & 0xFF);
-                self.bitsLeft -= bits;
+                let d: u8 =  (self.byte_buffer >> (self.bits_left - bits)) & ((1<<bits) - 1);
+                value = (value << bits) + ((d & 0xFFu8) as u64);
+                self.bits_left -= bits;
                 bits = 0;
             }
-            self.bufferByte();
+            self.buffer_byte()?;
         }
-        return value;
+        return Ok(value);
     }
 }

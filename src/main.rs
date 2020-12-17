@@ -10,8 +10,8 @@ use sprintz::sprintz_decoder::SprintzDecoder;
 mod sprintz;
 
 fn main() {
-    let input = Cursor::new(Vec::new());
-    let decoder = SprintzDecoder::new(input,0);
+    let mut input = Cursor::new(Vec::new());
+    let decoder = SprintzDecoder::new(&mut input,0);
     
     
 }
