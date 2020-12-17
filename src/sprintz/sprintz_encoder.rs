@@ -1,4 +1,3 @@
-use std::io::Cursor;
 use std::io::Write;
 use std::vec::Vec;
 use std::io;
@@ -18,11 +17,11 @@ pub struct SprintzEncoder<'a>
 
 
  impl SprintzEncoder<'_> {
-    pub fn new<'a>(dataOutput: &'a mut  Cursor<Vec<u8>>, block_size: u32)-> SprintzEncoder<'a>
+    pub fn new<'a>(data_output: &'a mut  Write, block_size: u32)-> SprintzEncoder<'a>
     {
         SprintzEncoder 
          {
-            output: SprintzOutput::new(dataOutput),
+            output: SprintzOutput::new(data_output),
             block_size,
             forecaster: Forecaster::new(),
             block: Vec::with_capacity(block_size.try_into().unwrap()),//u32 into usize 
@@ -91,7 +90,7 @@ pub struct SprintzEncoder<'a>
                 let err = self.block[index];
                 let err_bit = if get_bit(err,63) { 1 } else {0};
                 
-                self.output.write_bits(errBit,1)?;
+                self.output.write_bits(err_bit,1)?;
                 self.output.write_bits(err, nbits as u32)?;
             }
         }
@@ -117,7 +116,7 @@ fn get_bit(value: u64, bit: u32) -> bool{
 }
 
 struct SprintzOutput<'a> {
-    output: &'a mut  Cursor<Vec<u8>>,
+    output: &'a mut  Write,
     bits_left: u32,
     byte_buffer: u8
     
@@ -125,7 +124,7 @@ struct SprintzOutput<'a> {
 
 impl SprintzOutput<'_> {
     
-    fn new<'a>(output: &'a  mut Cursor<Vec<u8>>) -> SprintzOutput<'a>
+    fn new<'a>(output: &'a  mut Write) -> SprintzOutput<'a>
     {
         SprintzOutput{
             output,

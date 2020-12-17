@@ -1,5 +1,3 @@
-use std::io::Cursor;
-//use std::io::Write;
 use std::vec::Vec;
 use std::io;
 use std::io::Read;
@@ -20,7 +18,7 @@ pub struct SprintzDecoder<'a>
 
 
  impl SprintzDecoder<'_> {
-    pub fn new<'a>(datainput: &'a mut  Cursor<Vec<u8>>, block_size: u32)-> SprintzDecoder<'a>
+    pub fn new<'a>(datainput: &'a mut Read, block_size: u32)-> SprintzDecoder<'a>
     {
          SprintzDecoder 
          {
@@ -71,7 +69,7 @@ pub struct SprintzDecoder<'a>
 
 
 struct SprintzInput<'a> {
-    input: &'a mut  Cursor<Vec<u8>>,
+    input: &'a mut  Read,
     bits_left: u32,
     byte_buffer: u8
     
@@ -79,7 +77,7 @@ struct SprintzInput<'a> {
 
 impl SprintzInput<'_> {
     
-    fn new<'a>(input: &'a  mut Cursor<Vec<u8>>) -> SprintzInput<'a>{
+    fn new<'a>(input: &'a  mut Read) -> SprintzInput<'a>{
         SprintzInput{
             input,
             bits_left: 0,
