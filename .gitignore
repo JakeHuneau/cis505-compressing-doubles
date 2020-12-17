@@ -1,4 +1,7 @@
 /target
 Cargo.lock
+*.swp
+.idea/
 .DS_Store
+output_data/
 .project

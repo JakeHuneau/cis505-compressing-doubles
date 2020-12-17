@@ -1,5 +1,5 @@
 [package]
-name = "compressing-doubles"
+name = "compressing_doubles"
 version = "0.1.0"
 authors = ["JakeHuneau <jakehuneau@yahoo.com>", "Antony Gordon <gordonad@umich.edu>"]
 edition = "2018"
@@ -7,3 +7,4 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+bit_streamer = "0.1.0"
