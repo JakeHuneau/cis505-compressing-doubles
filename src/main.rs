@@ -1,9 +1,21 @@
-use compressing_doubles::{CompressionMode, Mode};
-use gorilla::decode::gorilla_decode;
-use gorilla::encode::gorilla_encode;
-use std::env;
-use std::process::exit;
+//use compressing_doubles::{CompressionMode, Mode};
+//use gorilla::decode::gorilla_decode;
+//use gorilla::encode::gorilla_encode;
+//use std::env;
+//use std::process::exit;
+use std::io::Cursor;
+use std::vec::Vec;
 
+use sprintz::sprintz_decoder::SprintzDecoder;
+mod sprintz;
+
+fn main() {
+    let input = Cursor::new(Vec::new());
+    let decoder = SprintzDecoder::new(input,0);
+    
+    
+}
+/*
 mod gorilla;
 
 fn main() {
@@ -55,4 +67,5 @@ fn main() {
     } else {
         println!("You chose Sprintz mode")
     }
-}
+    
+}*/
