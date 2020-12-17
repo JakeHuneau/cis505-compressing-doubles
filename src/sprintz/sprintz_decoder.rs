@@ -1,4 +1,3 @@
-use std::vec::Vec;
 use std::io;
 use std::io::Read;
 use super::forecaster::Forecaster;

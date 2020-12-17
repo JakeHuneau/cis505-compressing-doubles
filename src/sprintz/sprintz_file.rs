@@ -1,7 +1,5 @@
-use bit_streamer::Reader;
 use std::fs::File;
 use std::io::Write;
-use bit_streamer::Writer;
 use std::fs;
 use super::sprintz_encoder::SprintzEncoder;
 use super::sprintz_decoder::SprintzDecoder;
@@ -11,7 +9,6 @@ const block_size: u32 = 8;
 pub fn sprintz_decode(input_filename: &str, output_filename: &str) {
     // Initialize reader
     let file = File::open(input_filename).expect("Could not open file");
-    let mut reader = Reader::new(file);
     let mut f = File::create(output_filename).expect("Could not create output file");
 
     let mut values: Vec<f64> = Vec::new();

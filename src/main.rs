@@ -1,21 +1,14 @@
-//use compressing_doubles::{CompressionMode, Mode};
-//use gorilla::decode::gorilla_decode;
-//use gorilla::encode::gorilla_encode;
-//use std::env;
-//use std::process::exit;
-use std::io::Cursor;
+use compressing_doubles::{CompressionMode, Mode};
+use gorilla::decode::gorilla_decode;
+use gorilla::encode::gorilla_encode;
+use std::env;
+use std::process::exit;
 use std::vec::Vec;
-
-use sprintz::sprintz_decoder::SprintzDecoder;
+use sprintz::sprintz_file;
 mod sprintz;
 
-fn main() {
-    let mut input = Cursor::new(Vec::new());
-    let decoder = SprintzDecoder::new(&mut input,0);
-    
-    
-}
-/*
+
+
 mod gorilla;
 
 fn main() {
@@ -64,8 +57,12 @@ fn main() {
         } else {
             gorilla_decode(input_filename, output_filename);
         }
-    } else {
-        println!("You chose Sprintz mode")
+    } else if compression_mode == CompressionMode::Sprintz {
+          if mode == Mode::Encode {
+            sprintz_file::sprintz_encode(input_filename, output_filename);
+        } else {
+            sprintz_file::sprintz_decode(input_filename, output_filename);
+        }
     }
     
-}*/
+}
