@@ -18,7 +18,7 @@ pub struct SprintzDecoder<'a>
 
 
  impl SprintzDecoder<'_> {
-    pub fn new<'a>(datainput: &'a mut Read, block_size: u32)-> SprintzDecoder<'a>
+    pub fn new<'a>(datainput: &'a mut dyn Read, block_size: u32)-> SprintzDecoder<'a>
     {
          SprintzDecoder 
          {
@@ -34,7 +34,14 @@ pub struct SprintzDecoder<'a>
     }
     
     
-   pub fn read_value(&mut self) -> io::Result<u64>
+    pub fn read_value(&mut self) -> io::Result<f64>
+    {
+        let data: u64 =self.read_value_raw()?;
+        
+        Ok(f64::from_bits(data))
+     
+    }
+   pub fn read_value_raw(&mut self) -> io::Result<u64>
     {
         if self.left_in_block > 0 {
             let mut xor: u64 = self.get_bits(1)? << 63;
@@ -56,7 +63,7 @@ pub struct SprintzDecoder<'a>
                 self.left_in_block = self.block_size;
             }
             
-            return self.read_value();
+            return self.read_value_raw();
         }
         
     }
@@ -69,7 +76,7 @@ pub struct SprintzDecoder<'a>
 
 
 struct SprintzInput<'a> {
-    input: &'a mut  Read,
+    input: &'a mut  dyn Read,
     bits_left: u32,
     byte_buffer: u8
     
@@ -77,7 +84,7 @@ struct SprintzInput<'a> {
 
 impl SprintzInput<'_> {
     
-    fn new<'a>(input: &'a  mut Read) -> SprintzInput<'a>{
+    fn new<'a>(input: &'a  mut dyn Read) -> SprintzInput<'a>{
         SprintzInput{
             input,
             bits_left: 0,

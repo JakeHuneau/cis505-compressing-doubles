@@ -1,3 +1,4 @@
 pub mod sprintz_encoder;
 pub mod sprintz_decoder;
-pub mod forecaster;
+pub mod sprintz_file;
+mod forecaster;

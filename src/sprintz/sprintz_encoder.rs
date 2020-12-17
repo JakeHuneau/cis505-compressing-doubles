@@ -17,7 +17,7 @@ pub struct SprintzEncoder<'a>
 
 
  impl SprintzEncoder<'_> {
-    pub fn new<'a>(data_output: &'a mut  Write, block_size: u32)-> SprintzEncoder<'a>
+    pub fn new<'a>(data_output: &'a mut dyn Write, block_size: u32)-> SprintzEncoder<'a>
     {
         SprintzEncoder 
          {
@@ -30,8 +30,11 @@ pub struct SprintzEncoder<'a>
          }
     }
     
+    pub fn write(&mut self, value: f64) -> io::Result<()> {
+        self.write_raw(value.to_bits())
+    } 
     
-    pub fn write(&mut self, value: u64,  flushing: bool) -> io::Result<()> {
+    pub fn write_raw(&mut self, value: u64) -> io::Result<()> {
         let pos: u32 = self.block_pos.try_into().unwrap();
         if  pos == self.block_size {
             self.block_pos = 0;
@@ -41,14 +44,10 @@ pub struct SprintzEncoder<'a>
         let error: u64 = self.forecaster.error(value);
         self.forecaster.train(value, error);    
         self.block[self.block_pos] = error;
-    
         self.block_pos+=1;
-        
-        
+            
         Ok(())
-       // if(flushing) {
-       //     compressBlock(true);
-       // }
+    
     }
     
     pub fn flush(&mut self) -> io::Result<()> {
@@ -116,7 +115,7 @@ fn get_bit(value: u64, bit: u32) -> bool{
 }
 
 struct SprintzOutput<'a> {
-    output: &'a mut  Write,
+    output: &'a mut dyn Write,
     bits_left: u32,
     byte_buffer: u8
     
@@ -124,7 +123,7 @@ struct SprintzOutput<'a> {
 
 impl SprintzOutput<'_> {
     
-    fn new<'a>(output: &'a  mut Write) -> SprintzOutput<'a>
+    fn new<'a>(output: &'a  mut dyn Write) -> SprintzOutput<'a>
     {
         SprintzOutput{
             output,
