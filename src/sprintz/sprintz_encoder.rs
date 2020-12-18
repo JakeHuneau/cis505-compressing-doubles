@@ -19,15 +19,24 @@ pub struct SprintzEncoder<'a>
  impl SprintzEncoder<'_> {
     pub fn new<'a>(data_output: &'a mut dyn Write, block_size: u32)-> SprintzEncoder<'a>
     {
-        SprintzEncoder 
+        let mut end = SprintzEncoder 
          {
             output: SprintzOutput::new(data_output),
-            block_size,
+            block_size: block_size,
             forecaster: Forecaster::new(),
             block: Vec::with_capacity(block_size.try_into().unwrap()),//u32 into usize 
             block_pos: 0, 
             zero_blocks: 0,
+         };
+         
+         //Fill vec to index notation can be used without issue
+         for i in 0..block_size {
+            end.block.push(0u64);
          }
+         
+         end
+         
+         
     }
     
     pub fn write(&mut self, value: f64) -> io::Result<()> {
@@ -93,7 +102,10 @@ pub struct SprintzEncoder<'a>
                 self.output.write_bits(err, nbits as u32)?;
             }
         }
-        self.block.clear();
+        //Clear block
+        for i in 0..self.block.len() {
+            self.block[i] = 0;
+        }
         Ok(())
     }
     
