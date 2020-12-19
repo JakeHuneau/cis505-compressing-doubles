@@ -51,6 +51,8 @@ pub struct SprintzEncoder<'a>
         }
         
         let error: u64 = self.forecaster.error(value);
+        //println!("Encode {} -> {} -> {}",self.forecaster.predict(), value, error);
+    
         self.forecaster.train(value, error);    
         self.block[self.block_pos] = error;
         self.block_pos+=1;
@@ -61,14 +63,17 @@ pub struct SprintzEncoder<'a>
     
     pub fn flush(&mut self) -> io::Result<()> {
         
-        self.block_pos+=1;
+        //self.block_pos+=1;
         self.compress_block(true)?;
+        self.output.flush();
         
         Ok(())
     }
     
     
     fn compress_block (&mut self, flushing: bool) -> io::Result<()> {
+        
+        //println!("Encode compress block");
         let mut b = self.block[0];
         for i in 1..self.block_size {
             let index: usize = i.try_into().unwrap();
@@ -82,15 +87,18 @@ pub struct SprintzEncoder<'a>
             if flushing {
                 self.output.write_bits(0, 7)?;
                 self.output.write_bits(self.zero_blocks as u64, 16)?;
+                //println!("Encode zero {}", self.zero_blocks);
             }
         } else {
             if self.zero_blocks > 0 {
                 self.output.write_bits(0, 7)?;
                 self.output.write_bits(self.zero_blocks as u64, 16)?;
+                //println!("Encode zero {}", self.zero_blocks);
                 self.zero_blocks = 0;
             }
             
             self.output.write_bits(nbits, 7)?;
+            //println!("Encode nbits {}",   nbits);
             let num_to_add = if self.block_pos == 0 { self.block_size} else { self.block_pos.try_into().unwrap()};
             for i in 0..num_to_add {
             
@@ -139,7 +147,7 @@ impl SprintzOutput<'_> {
     {
         SprintzOutput{
             output,
-            bits_left: 0,
+            bits_left: 8,
             byte_buffer: 0
         }
     }
@@ -149,9 +157,12 @@ impl SprintzOutput<'_> {
         if self.bits_left == 0 {
             let mut buffer:[u8;1] = [self.byte_buffer];
            
+            //println!("Encode bit {} ", self.byte_buffer);
             self.output.write_all(&mut buffer)? ;
             self.byte_buffer = 0;
             self.bits_left = 8;
+            
+            
         }
         
        Ok(())
@@ -162,7 +173,7 @@ impl SprintzOutput<'_> {
         while bits > 0 {
             let mut shift = bits as i32 - self.bits_left as i32;
             if shift >= 0 {
-                self.byte_buffer |=  ((value >> shift) & ((1 << self.bits_left) - 1)) as u8;
+                self.byte_buffer |=  ((value >> shift) & ((1u64 << self.bits_left) - 1)) as u8;
                 bits -= self.bits_left;
                 self.bits_left = 0;
             } else {
@@ -175,5 +186,20 @@ impl SprintzOutput<'_> {
         }
         
         Ok(())
+    }
+    
+
+    
+    fn flush(&mut self) -> io::Result<()> {
+       
+        self.write_bits(0x0F, 4)?;
+        self.write_bits(0xFFFFFFFF, 32)?;
+        self.bits_left-=1;
+        self.buffer_byte()?;
+        self.output.flush()?;
+        
+        Ok(())
+        
+        
     }
 }

@@ -48,17 +48,24 @@ pub struct SprintzDecoder<'a>
             self.left_in_block-=1;
             
             let ret = self.forecaster.error(xor);
-            self.forecaster.train(xor, ret);
+            //println!("Decode {} -> {} -> {}",self.forecaster.predict(), xor, ret);
+            self.forecaster.train(ret, xor);
+           
             return Ok(ret);
         } else if self.zeroes_left > 0 {
+            //println!("Encode zero {}", self.zeroes_left);
             self.zeroes_left-=1;
+     
             return Ok(self.forecaster.predict());
         } else {
             self.nbits = self.get_bits(7)? as u32;
+            //println!("Decode nbits {}",   self.nbits);
             if self. nbits == 0 {
                 let num_zero_blocks = self.get_bits(16)?;
                 self.zeroes_left = num_zero_blocks * (self.block_size as u64);
+                //println!("Decode zero {}", self.zeroes_left);
             } else {
+                //println!("Decode open block");
                 self.left_in_block = self.block_size;
             }
             
@@ -96,6 +103,7 @@ impl SprintzInput<'_> {
             let mut buffer:[u8;1] = [0;1];
             self.input.read_exact(&mut buffer)? ;
             self.byte_buffer = buffer[0];
+            //println!("Decode bits {}",self.byte_buffer );
             self.bits_left = 8;
         }
         
@@ -105,16 +113,17 @@ impl SprintzInput<'_> {
     fn read_long(&mut self, mut bits:u32) -> io::Result<u64> {
         let mut value = 0u64;
         while bits > 0 {
+            let buffer :u64 = self.byte_buffer.into();
             if bits > self.bits_left || bits == 8 {
                 // Take only the bits_left "least significant" bits
-                let d: u8 = self.byte_buffer & ((1<< self.bits_left) - 1);
-                value = (value << self.bits_left) + ((d & 0xFFu8) as u64);
+                let d: u64 = buffer  & ((1u64 << self.bits_left) - 1);
+                value = (value << self.bits_left) + (d & 0xFFu64);
                 bits -= self.bits_left;
                 self.bits_left = 0;
             } else {
                 // Shift to correct position and take only least significant bits
-                let d: u8 =  (self.byte_buffer >> (self.bits_left - bits)) & ((1<<bits) - 1);
-                value = (value << bits) + ((d & 0xFFu8) as u64);
+                let d: u64 =  (buffer >> (self.bits_left - bits)) & ((1u64<<bits) - 1);
+                value = (value << bits) + (d & 0xFFu64);
                 self.bits_left -= bits;
                 bits = 0;
             }
