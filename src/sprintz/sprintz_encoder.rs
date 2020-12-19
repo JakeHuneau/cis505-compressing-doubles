@@ -30,7 +30,7 @@ pub struct SprintzEncoder<'a>
          };
          
          //Fill vec to index notation can be used without issue
-         for i in 0..block_size {
+         for _ in 0..block_size {
             end.block.push(0u64);
          }
          
@@ -63,9 +63,8 @@ pub struct SprintzEncoder<'a>
     
     pub fn flush(&mut self) -> io::Result<()> {
         
-        //self.block_pos+=1;
         self.compress_block(true)?;
-        self.output.flush();
+        self.output.flush()?;
         
         Ok(())
     }

@@ -4,7 +4,7 @@ use std::fs;
 use super::sprintz_encoder::SprintzEncoder;
 use super::sprintz_decoder::SprintzDecoder;
 
-const block_size: u32 = 8;
+const BLOCK_SIZE: u32 = 8;
 
 pub fn sprintz_decode(input_filename: &str, output_filename: &str) {
     // Initialize reader
@@ -12,11 +12,11 @@ pub fn sprintz_decode(input_filename: &str, output_filename: &str) {
     let mut f = File::create(output_filename).expect("Could not create output file");
 
     let mut values: Vec<f64> = Vec::new();
-    let mut decode = SprintzDecoder::new(&mut file, block_size);
-;
+    let mut decode = SprintzDecoder::new(&mut file, BLOCK_SIZE);
+
     
    loop {
-        let mut value = decode.read_value();
+        let value = decode.read_value();
         match value {
             Ok(data) => {
                 values.push(data);
@@ -48,7 +48,7 @@ pub fn sprintz_encode(input_filename: &str, output_filename: &str) {
 
     // Start by making a buffer that writes into a file called input_filename
     let mut f = File::create(output_filename).expect("Could not create file");
-    let mut decode = SprintzEncoder::new(&mut f, block_size);
+    let mut decode = SprintzEncoder::new(&mut f, BLOCK_SIZE);
     
     for value in &data {
         let res = decode.write(*value);
@@ -60,7 +60,7 @@ pub fn sprintz_encode(input_filename: &str, output_filename: &str) {
        
     }
     
-    decode.flush();
+    decode.flush().expect("Failed to flush data");
     //println!("Encoded {} lines", data.len());
     
     

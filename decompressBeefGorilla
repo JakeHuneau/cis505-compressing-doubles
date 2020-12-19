@@ -1,6 +1,6 @@
 #!/bin/bash
 
-for f in output_data/Beef/*; do
+for f in ./output_data/Beef/*.gorrilla; do
   echo "starting" $(basename $f)
-  target/release/compressing_doubles gorilla decode $f $f.decoded;
+  ./target/release/compressing_doubles gorilla decode $f $f.decoded;
 done

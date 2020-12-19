@@ -1,0 +1,6 @@
+#!/bin/bash
+
+for f in ./data/Beef/*; do
+  echo "starting" $(basename $f)
+  ./target/release/compressing_doubles sprintz encode $f ./output_data/Beef/$(basename $f).sprintz;
+done

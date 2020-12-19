@@ -1,6 +1,6 @@
 #!/bin/bash
 
-for f in data/Beef/*; do
+for f in ./data/Beef/*; do
   echo "starting" $(basename $f)
-  target/release/compressing_doubles gorilla encode $f output_data/Beef/$(basename $f).gorilla;
+  ./target/release/compressing_doubles gorilla encode $f ./output_data/Beef/$(basename $f).gorilla;
 done
