@@ -6,6 +6,7 @@ use super::sprintz_decoder::SprintzDecoder;
 
 const BLOCK_SIZE: u32 = 8;
 
+///Takes a sprintz compressed file as input and decompress the contents to the output file
 pub fn sprintz_decode(input_filename: &str, output_filename: &str) {
     // Initialize reader
     let mut file = File::open(input_filename).expect("Could not open file");
@@ -38,6 +39,7 @@ pub fn sprintz_decode(input_filename: &str, output_filename: &str) {
     
 }
 
+///Takes a file of comma seperated decimals and compresses the contents to a file
 pub fn sprintz_encode(input_filename: &str, output_filename: &str) {
     let raw_data = fs::read_to_string(input_filename).expect("Unable to read file");
     let data = raw_data
@@ -62,8 +64,6 @@ pub fn sprintz_encode(input_filename: &str, output_filename: &str) {
     
     decode.flush().expect("Failed to flush data");
     //println!("Encoded {} lines", data.len());
-    
-    
     
     
 }

@@ -1,5 +1,6 @@
 
-
+//A simple forecaster for printz that only predicts the last value given
+//Used XOR delte to calculate forcasting error
 pub struct Forecaster {
     previous: u64,
     

@@ -4,6 +4,7 @@ use std::io;
 use super::forecaster::Forecaster;
 use std::convert::TryInto;
 
+//Compresses numebers to a sprintz stream
 pub struct SprintzEncoder<'a>
 {
     output: SprintzOutput<'a>,
@@ -39,11 +40,15 @@ pub struct SprintzEncoder<'a>
          
     }
     
+    
+    //Write a floating point number to the stream
     pub fn write(&mut self, value: f64) -> io::Result<()> {
         self.write_raw(value.to_bits())
     } 
     
-    pub fn write_raw(&mut self, value: u64) -> io::Result<()> {
+    
+    //Write a number as a 64bit integer to the sprintz stream
+    fn write_raw(&mut self, value: u64) -> io::Result<()> {
         let pos: u32 = self.block_pos.try_into().unwrap();
         if  pos == self.block_size {
             self.block_pos = 0;
@@ -61,6 +66,7 @@ pub struct SprintzEncoder<'a>
     
     }
     
+    ///Used after the last number is read to the Sprintz stream
     pub fn flush(&mut self) -> io::Result<()> {
         
         self.compress_block(true)?;
@@ -69,7 +75,7 @@ pub struct SprintzEncoder<'a>
         Ok(())
     }
     
-    
+    //Compress a block and packs the errors into a bits
     fn compress_block (&mut self, flushing: bool) -> io::Result<()> {
         
         //println!("Encode compress block");
@@ -82,6 +88,7 @@ pub struct SprintzEncoder<'a>
         let nbits: u64 = leading_zeroes(b);
         
         if nbits == 0 && get_bit(b,64) == false {
+            //Store zero blocks
             self.zero_blocks+=1;
             if flushing {
                 self.output.write_bits(0, 7)?;
@@ -96,11 +103,13 @@ pub struct SprintzEncoder<'a>
                 self.zero_blocks = 0;
             }
             
+            //Write block header which is lest number of significant bits
             self.output.write_bits(nbits, 7)?;
             //println!("Encode nbits {}",   nbits);
             let num_to_add = if self.block_pos == 0 { self.block_size} else { self.block_pos.try_into().unwrap()};
             for i in 0..num_to_add {
             
+                 //  Pack the errors into bits
                 let index : usize = i.try_into().unwrap();
                 let err = self.block[index];
                 let err_bit = if get_bit(err,63) { 1 } else {0};
@@ -133,6 +142,8 @@ fn get_bit(value: u64, bit: u32) -> bool{
     return (value >> bit) & 1 == 1;
 }
 
+
+//Represents a Sprintz stream for compressing data
 struct SprintzOutput<'a> {
     output: &'a mut dyn Write,
     bits_left: u32,
@@ -167,6 +178,7 @@ impl SprintzOutput<'_> {
        Ok(())
     }
     
+    //Write a given amount of bits to the stream
     fn write_bits(&mut self, value: u64, mut bits:u32) ->  io::Result<()>
     {
         while bits > 0 {
@@ -190,7 +202,7 @@ impl SprintzOutput<'_> {
 
     
     fn flush(&mut self) -> io::Result<()> {
-       
+       //signal stream termination
         self.write_bits(0x0F, 4)?;
         self.write_bits(0xFFFFFFFF, 32)?;
         self.bits_left-=1;

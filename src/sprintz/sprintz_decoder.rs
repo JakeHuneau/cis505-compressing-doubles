@@ -2,7 +2,7 @@ use std::io;
 use std::io::Read;
 use super::forecaster::Forecaster;
 
-
+//Decompresses a Sprintz Stream
 pub struct SprintzDecoder<'a>
 {
     input: SprintzInput<'a>,
@@ -32,7 +32,8 @@ pub struct SprintzDecoder<'a>
          
     }
     
-    
+    ///Decompresses a number from the sprintz stream 
+    /// Converts the number to a double percision float
     pub fn read_value(&mut self) -> io::Result<f64>
     {
         let data: u64 =self.read_value_raw()?;
@@ -40,7 +41,10 @@ pub struct SprintzDecoder<'a>
         Ok(f64::from_bits(data))
      
     }
-   pub fn read_value_raw(&mut self) -> io::Result<u64>
+    
+    
+    ///Decompresses a number from the sprintz stream
+   fn read_value_raw(&mut self) -> io::Result<u64>
     {
         if self.left_in_block > 0 {
             let mut xor: u64 = self.get_bits(1)? << 63;
@@ -81,6 +85,7 @@ pub struct SprintzDecoder<'a>
 }
 
 
+//Represents a sprintz stream of compressed data
 struct SprintzInput<'a> {
     input: &'a mut  dyn Read,
     bits_left: u32,
@@ -110,12 +115,14 @@ impl SprintzInput<'_> {
         return Ok(());
     }
     
+    
+    ///Reads the given bits from the sprintz stream
     fn read_long(&mut self, mut bits:u32) -> io::Result<u64> {
         let mut value = 0u64;
         while bits > 0 {
             let buffer :u64 = self.byte_buffer.into();
             if bits > self.bits_left || bits == 8 {
-                // Take only the bits_left "least significant" bits
+                // Take only the  least significant bits
                 let d: u64 = buffer  & ((1u64 << self.bits_left) - 1);
                 value = (value << self.bits_left) + (d & 0xFFu64);
                 bits -= self.bits_left;
