@@ -1,0 +1,5 @@
+#!/bin/bash
+
+for f in data/Beef/*; do
+  cmp --silent $f output_data/Beef/$(basename $f).sprintz.decoded || echo "$f changed"
+done
